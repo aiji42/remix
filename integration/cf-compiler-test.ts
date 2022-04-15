@@ -39,6 +39,7 @@ test.describe("cloudflare compiler", () => {
           import { content as browserPackage } from "browser-pkg";
           import { content as esmOnlyPackage } from "esm-only-pkg";
           import { content as cjsOnlyPackage } from "cjs-only-pkg";
+          import "depends-global-buffer-pkg";
 
           export default function Index() {
             return (
@@ -122,6 +123,16 @@ test.describe("cloudflare compiler", () => {
         "node_modules/cjs-only-pkg/node-cjs.js": js`
           module.exports = { content: "cjs-only-pkg/node-cjs.js" };
         `,
+        "node_modules/depends-global-buffer-pkg/package.json": json`
+          {
+            "name": "depends-node-modules-pkg",
+            "version": "1.0.0",
+            "main": "./main.js"
+          }
+        `,
+        "node_modules/depends-global-buffer-pkg/main.js": js`
+          let buf = Buffer.alloc(256);
+        `,
       },
     });
   });
@@ -154,6 +165,16 @@ test.describe("cloudflare compiler", () => {
     expect(serverBundle).not.toMatch(
       "__DEFAULT_EXPORTS_SHOULD_NOT_BE_IN_BUNDLE__"
     );
+  });
+
+  test("global Buffer is polyfilled", async () => {
+    let serverBundle = await fs.readFile(
+      path.resolve(projectDir, "build/index.js"),
+      "utf8"
+    );
+
+    expect(serverBundle).not.toMatch("Buffer.alloc(256);");
+    expect(serverBundle).toMatch(/.+\.alloc\(256\);/);
   });
 
   // TODO: remove this when we get rid of that feature.

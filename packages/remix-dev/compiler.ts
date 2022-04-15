@@ -5,6 +5,7 @@ import * as fse from "fs-extra";
 import debounce from "lodash.debounce";
 import chokidar from "chokidar";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 
 import { BuildMode, BuildTarget } from "./build";
 import type { RemixConfig } from "./config";
@@ -428,7 +429,10 @@ function createServerBuild(
   ];
 
   if (config.serverPlatform !== "node") {
-    plugins.unshift(NodeModulesPolyfillPlugin());
+    plugins.unshift(
+      NodeModulesPolyfillPlugin(),
+      NodeGlobalsPolyfillPlugin({ buffer: true, process: false })
+    );
   }
 
   return esbuild
